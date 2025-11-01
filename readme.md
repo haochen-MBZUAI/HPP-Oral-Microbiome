@@ -11,6 +11,14 @@
 5. **Translational value:** Phenotype‑selected oral features improve disease‑risk prediction and show directionally consistent replication at the genus level.
 <div align=center><img src="visulization/Fig1.png" width="80%" height="80%" /></div>
 
+## Environment Setup
+```
+conda create -n oral_hpp python==3.11
+pip install -r requirements.txt
+```
+
+
+
 ## Data Access
 
 ### HPP (Human Phenotype Project)
