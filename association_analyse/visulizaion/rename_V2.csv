@@ -1,0 +1,45 @@
+Original Name,Suggested Name
+attenuation_coefficient_qbox,Liver Attenuation
+speed_of_sound_qbox,Liver Sound Speed
+elasticity_qbox_median,Liver Elasticity
+velocity_qbox_median,Shear Wave Velocity
+viscosity_qbox_median,Liver Viscosity
+dispersion_qbox_median,Shear Wave Dispersion
+cgm_mean,Mean Glucose
+cgm_median,Median Glucose
+cg_iqr,Glucose IQR
+cgm_gmi,GMI
+cgm_cv,CV %
+cgm_mad,MAD
+cgm_mag,MAG
+cgm_modd,MODD
+cgm_sd_roc,SD of ROC
+cgm_sdhmm,Time-of-Day SD
+cgm_sdw,Interday SD
+cgm_sdwsh,Within-Hour SD
+cgm_above_140,Time > 140 mg/dL
+cgm_above_180,Time > 180 mg/dL
+cgm_hbgi,HBGI
+cgm_lbgi,LBGI
+cgm_adrr,ADRR
+cgm_cogi,COGI
+cgm_grade,GRADE Score
+cgm_grade_eugly,GRADE Euglycemia
+bmi,BMI
+body_comp_total_fat_mass,Total Fat Mass
+body_comp_total_tissue_percent_fat,Total Body Fat %
+body_comp_total_tissue_mass,Total Mass
+waist_circumference,Waist Circumference
+hip_circumference,Hip Circumference
+waist_to_hip_ratio,Waist-to-Hip Ratio
+body_comp_android_fat_mass,Android Fat Mass
+body_comp_android_tissue_percent_fat,Android Fat %
+body_comp_trunk_fat_mass,Trunk Fat Mass
+body_comp_trunk_tissue_percent_fat,Trunk Fat %
+total_scan_vat_mass,VAT Mass
+total_scan_vat_volume,VAT Volume
+total_scan_sat_mass,SAT Mass
+total_scan_sat_volume,SAT Volume
+body_comp_total_lean_mass,Total Lean Mass
+body_comp_android_lean_mass,Android Lean Mass
+body_comp_trunk_lean_mass,Trunk Lean Mass
