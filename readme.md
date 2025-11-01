@@ -9,7 +9,7 @@
 3. **Tight design and rigor:** ±180‑day temporal alignment, covariate‑adjusted OLS models, and Bonferroni control per feature layer.
 4. **Biological insight:** Strain signatures align with adiposity, while functional signatures track glycemic control; community contributions are quantified.
 5. **Translational value:** Phenotype‑selected oral features improve disease‑risk prediction and show directionally consistent replication at the genus level.
-<div align=center><img src="visulization/Fig1.png" width="50%" height="50%" /></div>
+<div align=center><img src="visulization/Fig1.png" width="80%" height="80%" /></div>
 
 ## Data Access
 
