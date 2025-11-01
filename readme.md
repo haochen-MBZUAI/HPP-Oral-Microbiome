@@ -17,6 +17,22 @@ conda create -n oral_hpp python==3.11
 pip install -r requirements.txt
 ```
 
+## Pipeline 
+
+1. **Preprocess (`preprocess/`)**  
+   Harmonize time windows (±180 days), clean phenotypes, and transform microbiome features  
+   (zero‑replacement thresholds, total‑sum normalization → PPM, log₁₀ transform).
+
+2. **Association analysis (`association_analyse/`)**  
+   OLS models adjusted for age, sex, smoking; Bonferroni control per layer (strain / gene family / pathway).
+
+3. **Oral feature classification (`oral_features_classfication/`)**  
+   Take the **significant** features and assign **beneficial / detrimental / mixed** labels by synthesizing directions across the three systems (liver, CGM, body).
+
+4. **Metabolic disease prediction (`metabolic_diseases/`)**  
+   Compare **baseline (all features)** vs **phenotype‑selected features** for classification of common metabolic risk states with cross‑validated evaluation.
+
+---
 
 
 ## Data Access
