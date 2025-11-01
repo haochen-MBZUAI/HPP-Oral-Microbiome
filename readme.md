@@ -3,7 +3,7 @@
 > Code to reproduce the analyses in **“Decoding the Oral Microbiome: Metagenomic Insights into Host Metabolic Health”**.  
 
 
-<div align=center><img src="Figs/Fig1.png" width="50%" height="50%" /></div>
+<div align=center><img src="visulization/Fig1.png" width="50%" height="50%" /></div>
 
 
 ## Data Access
