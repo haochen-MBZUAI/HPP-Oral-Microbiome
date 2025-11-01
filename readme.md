@@ -2,9 +2,14 @@
 
 > Code to reproduce the analyses in **“Decoding the Oral Microbiome: Metagenomic Insights into Host Metabolic Health”**.  
 
+## Our Contributions:
 
+1. **Fine granularity:** Strain‑level oral metagenomes with matched gene families and pathways (MetaPhlAn 4 + HUMAnN 3.6).
+2. **Deep multi‑system phenotyping:** 44 metabolic measures across liver ultrasonography, CGM, and DXA in 9,431 adults.
+3. **Tight design and rigor:** ±180‑day temporal alignment, covariate‑adjusted OLS models, and Bonferroni control per feature layer.
+4. **Biological insight:** Strain signatures align with adiposity, while functional signatures track glycemic control; community contributions are quantified.
+5. **Translational value:** Phenotype‑selected oral features improve disease‑risk prediction and show directionally consistent replication at the genus level.
 <div align=center><img src="visulization/Fig1.png" width="50%" height="50%" /></div>
-
 
 ## Data Access
 
