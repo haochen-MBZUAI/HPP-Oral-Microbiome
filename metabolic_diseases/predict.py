@@ -9,11 +9,12 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
+from lightgbm import LGBMClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, roc_auc_score
 
 # NEW:
-from sklearn.model_selection import StratifiedKFold  # 5 折交叉验证
-import os  # 仅用于检查每折特征文件是否存在
+from sklearn.model_selection import StratifiedKFold  # 5-fold cross-validation
+import os  # Used only to check if per-fold feature files exist
 
 ############################################################################
 ### CONFIGURATION AREA ###
@@ -39,12 +40,13 @@ NON_FEATURE_COLS = [
 ]
 
 # --- 4. Experiment Switches ---
-# Choose the model you want to run: 'svm', 'random_forest', or 'xgboost'
-MODEL_TO_USE = 'xgboost'
+# Choose the model you want to run: 'svm', 'random_forest', 'xgboost', or 'lightgbm'
+MODEL_TO_USE = 'lightgbm'
 
-USE_FEATURE_SELECTION = False  # 若设为 True，将在每折内优先读取 _fold{n}.csv 的通路列表
+# If set to True, pathway lists from _fold{n}.csv will be prioritized within each fold
+USE_FEATURE_SELECTION = False
 
-# NEW: CV 配置
+# NEW: CV Configuration
 N_SPLITS = 5
 RANDOM_STATE = 42
 
@@ -125,10 +127,10 @@ print("\n--- STEP 7: Preparing Final X and y for Modeling ---")
 y = df_model_data[TARGET_DISEASE]
 X = df_model_data.drop(columns=NON_FEATURE_COLS, errors='ignore')
 
-# Sanitize feature names for XGBoost compatibility (保留你的原逻辑)
-print("Sanitizing feature names for XGBoost compatibility...")
-regex = re.compile(r"\[|\]|<", re.IGNORECASE)
-X.columns = [regex.sub("_", col) if any(x in str(col) for x in set(('[', ']', '<'))) else col for col in X.columns.values]
+# Sanitize feature names for XGBoost AND LightGBM compatibility
+print("Sanitizing feature names for Tree-based models compatibility...")
+regex = re.compile(r"\[|\]|<|:", re.IGNORECASE)
+X.columns = [regex.sub("_", col) if any(x in str(col) for x in set(('[', ']', '<', ':'))) else col for col in X.columns.values]
 print("Column names have been sanitized.")
 print(f"Final shape of X for modeling: {X.shape}")
 
@@ -147,9 +149,9 @@ for fold_idx, (train_idx, test_idx) in enumerate(skf.split(X, y), start=1):
     y_train = y.iloc[train_idx]
     y_test = y.iloc[test_idx]
 
-    # --- [每折] 按需加载特征选择的通路列表（优先每折文件 -> 汇总文件 -> 全特征） ---
+    # --- [Per Fold] Load feature selection pathway list on demand (Priority: Per-fold file -> Summary file -> All features) ---
     if USE_FEATURE_SELECTION:
-        # 生成每折文件名
+        # Generate per-fold filename
         if IMPORTANT_PATHWAYS_FILE.endswith('.csv'):
             per_fold_path = IMPORTANT_PATHWAYS_FILE.replace('.csv', f'_fold{fold_idx}.csv')
         else:
@@ -178,7 +180,7 @@ for fold_idx, (train_idx, test_idx) in enumerate(skf.split(X, y), start=1):
         else:
             print("NOTE: No matching pathway columns found in feature matrix. Using all features.")
 
-    # --- [每折] 自动清洗（保证数值）+ 仅用训练集统计量做缺失填补 ---
+    # --- [Per Fold] Auto-clean (ensure numeric) + Imputation using only training set statistics ---
     dirty_columns = []
     for col in X_train.columns:
         if X_train[col].dtype == 'object':
@@ -192,7 +194,7 @@ for fold_idx, (train_idx, test_idx) in enumerate(skf.split(X, y), start=1):
     X_train = X_train.fillna(medians)
     X_test = X_test.fillna(medians)
 
-    # --- [每折] 训练与预测 ---
+    # --- [Per Fold] Training and Prediction ---
     if MODEL_TO_USE == 'svm':
         print("Applying StandardScaler for SVM...")
         scaler = StandardScaler()
@@ -215,11 +217,23 @@ for fold_idx, (train_idx, test_idx) in enumerate(skf.split(X, y), start=1):
         y_pred = model.predict(X_test)
         y_pred_proba = model.predict_proba(X_test)[:, 1]
 
+    elif MODEL_TO_USE == 'lightgbm':
+        model = LGBMClassifier(
+            n_estimators=200,
+            random_state=RANDOM_STATE,
+            class_weight='balanced',
+            n_jobs=-1,
+            verbosity=-1  # Suppress warnings
+        )
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+        y_pred_proba = model.predict_proba(X_test)[:, 1]
+
     else:
         print(f"ERROR: Model '{MODEL_TO_USE}' is not recognized. Exiting.")
         exit()
 
-    # --- [每折] 评估 ---
+    # --- [Per Fold] Evaluation ---
     acc = accuracy_score(y_test, y_pred)
     try:
         auc = roc_auc_score(y_test, y_pred_proba)
@@ -237,12 +251,12 @@ for fold_idx, (train_idx, test_idx) in enumerate(skf.split(X, y), start=1):
     try:
         print(classification_report(y_test, y_pred, target_names=['Not Hypertensive (0)', 'Hypertensive (1)']))
     except Exception:
-        # 如果某折只有单类，target_names 可能报错
+        # If a fold only has a single class, target_names might raise an error
         print(classification_report(y_test, y_pred))
     print("\nConfusion Matrix:")
     print(confusion_matrix(y_test, y_pred))
 
-# --- CV 汇总 ---
+# --- CV Summary ---
 print("\n=== Cross-Validation Summary ===")
 if len(acc_list) > 0:
     print(f"Accuracy (mean ± std): {np.nanmean(acc_list):.4f} ± {np.nanstd(acc_list):.4f}")
