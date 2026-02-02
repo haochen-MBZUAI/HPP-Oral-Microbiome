@@ -242,7 +242,7 @@ def main():
         # MODIFICATION: Updated description to use 'phenotype'.
         description="Run regression analysis between gene family features and phenotype metrics.")
     parser.add_argument("--arrow_dir", type=str,
-                        default="home/ec2-user/Stidies/Oral_HPP/oral_data/gene_family_processed",
+                        default="home/ec2-user/Studies/Oral_HPP/oral_data/gene_family_processed",
                         help="Directory containing the Arrow files.")
     # MODIFICATION: Renamed argument and help text from 'liver' to 'phenotype'.
     parser.add_argument("--phenotype_data", type=str,
