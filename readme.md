@@ -4,12 +4,20 @@
 
 ## Our Contributions:
 
-1. **Fine granularity:** Strain‑level oral metagenomes with matched gene families and pathways (MetaPhlAn 4 + HUMAnN 3.6).
-2. **Deep multi‑system phenotyping:** 44 metabolic measures across liver ultrasonography, CGM, and DXA in 9,431 adults.
-3. **Tight design and rigor:** ±180‑day temporal alignment, covariate‑adjusted OLS models, and Bonferroni control per feature layer.
-4. **Biological insight:** Strain signatures align with adiposity, while functional signatures track glycemic control; community contributions are quantified.
-5. **Translational value:** Phenotype‑selected oral features improve disease‑risk prediction and show directionally consistent replication at the genus level.
+1. **Population-scale, high-resolution metagenomics with deep metabolic phenotyping:** We profile standardized bilateral buccal-swab whole-metagenome data in 9,431 HPP adults, paired with 44 metabolic measures spanning liver ultrasound, CGM, and DXA.
+2. **A unified, rigorous multi-layer MWAS framework:** We systematically test associations across strain, gene-family, and pathway layers using covariate-adjusted regression and layer-wise multiple-testing control, enabling direct comparison of signals across metabolic systems.
+3. **Actionable outputs with translational and external support:** We deliver a multi-system oral–metabolic association atlas with prioritized cross-phenotype markers, demonstrate proof-of-concept metabolic disease classification using phenotype-selected oral features, and provide independent directional replication at genus resolution.
 <div align=center><img src="visulization/Fig1.png" width="80%" height="80%" /></div>
+
+## Data Access
+
+### HPP (Human Phenotype Project)
+- **Controlled Access**: Due to ethical and IRB requirements, HPP data is available through a controlled-access portal.
+- **Access Portal**: <https://humanphenotypeproject.org/data-access>
+- **Process**: Researchers must submit a statement of purpose and sign a data use agreement. Upon approval, data can be accessed in a secure environment.
+- **TRE Tutorial**: After obtaining access, please refer to [`User-guide-for-TRE.pdf`](./User-guide-for-TRE.pdf) for a detailed guide on how to use the Trusted Research Environment (TRE).
+- **Ethics Approval**: Weizmann Institute IRB **#1719-1**.
+
 
 ## Environment Setup
 ```
@@ -19,28 +27,26 @@ pip install -r requirements.txt
 
 ## Pipeline 
 
-1. **Preprocess (`preprocess/`)**  
-   Harmonize time windows (±180 days), clean phenotypes, and transform microbiome features  
-   (zero‑replacement thresholds, total‑sum normalization → PPM, log₁₀ transform).
+Run in order; inputs/outputs are chained (see `PIPELINE_VERIFICATION.md` for full I/O).
 
-2. **Association analysis (`association_analyse/`)**  
-   OLS models adjusted for age, sex, smoking; Bonferroni control per layer (strain / gene family / pathway).
+1. **Preprocess** (`preprocess/`)  
+   Clean phenotypes; standardize strain/pathway/gene-family abundance (zero-replacement → normalization → PPM → log₁₀). Skips datasets with &lt;200 samples.
 
-3. **Oral feature classification (`oral_features_classfication/`)**  
-   Take the **significant** features and assign **beneficial / detrimental / mixed** labels by synthesizing directions across the three systems (liver, CGM, body).
+2. **Association analysis** (`association_analyse/`)  
+   OLS (age, sex, smoking); strain/pathway merged with phenotype by 180-day time window; gene family by participant. Then Bonferroni correction (`correct_P_value_*`).
 
-4. **Metabolic disease prediction (`metabolic_diseases/`)**  
-   Compare **baseline (all features)** vs **phenotype‑selected features** for classification of common metabolic risk states with cross‑validated evaluation.
+3. **Key oral features** (`Identification_key_oral_features/`)  
+   Rank by association breadth and take top features per system. 
+4. **Oral feature classification** (`oral_features_classfication/`)  
+   Classify significant strain/pathway into **Favourable / Adverse / Mixed** from association directions across liver, CGM, body.
+
+5. **Metabolic disease prediction** (`metabolic_diseases/`)  
+   Select pathways linked to disease-related phenotypes (5-fold CV); train classifiers (e.g. LightGBM) on pathway abundance; evaluate with cross-validation.
+
+6. **Replication** (`replication_study/`)  
+   In an independent cohort: convert XPT→CSV, preprocess genus and phenotype, run association (BMI, waist), then map main strain results to genus and compare direction.
 
 ---
 
 
-## Data Access
 
-### HPP (Human Phenotype Project)
-- **Controlled Access**: Due to ethical and IRB requirements, HPP data is available through a controlled-access portal.
-- **Access Portal**: <https://humanphenotypeproject.org/data-access>
-- **Process**: Researchers must submit a statement of purpose and sign a data use agreement. Upon approval, data can be accessed in a secure environment.
-- **Ethics Approval**: Weizmann Institute IRB **#1719-1**.
-- **Data Scope**: This study utilizes oral swab metagenomes (MetaPhlAn 4 / HUMAnN 3.6 outputs) and 44 metabolic phenotypes, including liver ultrasound, CGM, and DXA.
-- **We do not provide any controlled data in this repository**. You can run the code in this repository within the approved environment to reproduce the experiments.
