@@ -23,6 +23,11 @@ def clean_and_transform_csv(input_csv_path, output_csv_path):
             df.to_csv(output_csv_path, index=False)
             return
 
+        # Check if number of samples is less than 200
+        if len(df) < 200:
+            print(f"Warning: File {input_csv_path} has {len(df)} samples, which is less than 200. Skipping processing.")
+            return
+
         # 2. Identify columns to keep as is and columns to process (pathway columns)
         cols_to_exclude_from_processing_user_defined = [
             'participant_id', 'cohort', 'research_stage', 'array_index', 'collection_data'
@@ -105,13 +110,13 @@ def clean_and_transform_csv(input_csv_path, output_csv_path):
 
 def main():
     # --- Configuration ---
-    input_csv_file = "home/ec2-user/Stidies/Oral_HPP/oral_data/pathway.csv"
-    output_csv_file = "home/ec2-user/Stidies/Oral_HPP/oral_data/pathway_processed"
+    input_csv_file = "home/ec2-user/Studies/Oral_HPP/oral_data/pathway.csv"
+    output_csv_file = "home/ec2-user/Studies/Oral_HPP/oral_data/pathway_processed.csv"
     # --- End Configuration ---
 
     # --- for strain ---
-    # input_csv_file = "home/ec2-user/Stidies/Oral_HPP/oral_data/strain.csv"
-    # output_csv_file = "home/ec2-user/Stidies/Oral_HPP/oral_data/strain_processed"
+    # input_csv_file = "home/ec2-user/Studies/Oral_HPP/oral_data/strain.csv"
+    # output_csv_file = "home/ec2-user/Studies/Oral_HPP/oral_data/strain_processed.csv"
     # --- for strain ---
 
     print(f"Starting CSV processing for: {input_csv_file}")
