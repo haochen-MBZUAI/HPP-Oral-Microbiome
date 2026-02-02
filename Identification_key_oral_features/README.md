@@ -37,9 +37,7 @@ Ranks gene family features by association count within each system and selects t
 **Output:**
 - `key_gene_family_features.csv`
 
-**Note:** Uses the pruned set obtained after correlation-based clumping (Methods 4.5).
 
----
 
 ## Configuration
 
