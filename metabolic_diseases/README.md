@@ -1,6 +1,6 @@
 # Metabolic Diseases Prediction Module
 
-This module identifies oral microbiome features associated with metabolic diseases and builds predictive models.
+This module identifies oral microbiome features associated with metabolic diseases and builds models.
 
 ## Scripts
 
@@ -18,22 +18,21 @@ Identifies phenotypes and pathways associated with metabolic diseases using ANOV
 
 ---
 
-### `predict.py`
+### `classfication.py`
 Builds machine learning models to predict metabolic diseases using pathway features.
 
 **Input:**
 - `pathway_processed.csv` (from `preprocess` module)
 - `metabolic_diseases.csv` (disease labels)
-- `significant_pathways_from_statistic.csv` (optional, from `select_diseases_associated_oral_features.py`)
 
 **Output:**
-- Console output: Accuracy, AUC, classification reports, confusion matrices (5-fold CV results)
+- Console output: Accuracy, AUC (5-fold CV results)
 
 ---
 
 ## Workflow
 
 1. Run `select_diseases_associated_oral_features.py` to identify disease-associated features
-2. Run `predict.py` to build and evaluate prediction models
+2. Run `predict.py` to build and evaluate models
 
 
