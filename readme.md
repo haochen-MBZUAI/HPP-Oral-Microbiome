@@ -25,26 +25,26 @@ conda create -n oral_hpp python==3.11
 pip install -r requirements.txt
 ```
 
-## Pipeline 
+## Running Pipeline 
 
-Run in order; inputs/outputs are chained (see `PIPELINE_VERIFICATION.md` for full I/O).
+The analysis follows a sequential workflow where inputs and outputs are chained. While the high-level steps are outlined below, please refer to: * **Subdirectory READMEs**: Each folder contains a local `README.md` with detailed execution instructions and script-level documentation.
 
 1. **Preprocess** (`preprocess/`)  
-   Clean phenotypes; standardize strain/pathway/gene-family abundance (zero-replacement → normalization → PPM → log₁₀). Skips datasets with &lt;200 samples.
+   Clean phenotypes; standardize strain/pathway/gene-family abundance (zero-replacement → normalization → PPM → log₁₀). 
 
 2. **Association analysis** (`association_analyse/`)  
-   OLS (age, sex, smoking); strain/pathway merged with phenotype by 180-day time window; gene family by participant. Then Bonferroni correction (`correct_P_value_*`).
+   OLS (age, sex, smoking); Then Bonferroni correction (`correct_P_value_*`).
 
 3. **Key oral features** (`Identification_key_oral_features/`)  
    Rank by association breadth and take top features per system. 
-4. **Oral feature classification** (`oral_features_classfication/`)  
+4. **Oral feature grouping** (`oral_features_classfication/`)  
    Classify significant strain/pathway into **Favourable / Adverse / Mixed** from association directions across liver, CGM, body.
 
-5. **Metabolic disease prediction** (`metabolic_diseases/`)  
-   Select pathways linked to disease-related phenotypes (5-fold CV); train classifiers (e.g. LightGBM) on pathway abundance; evaluate with cross-validation.
+5. **Metabolic disease classfication** (`metabolic_diseases/`)  
+   Select pathways linked to disease-related phenotypes (5-fold CV); train classifiers (LightGBM) on strain/pathway abundance; evaluate with cross-validation.
 
 6. **Replication** (`replication_study/`)  
-   In an independent cohort: convert XPT→CSV, preprocess genus and phenotype, run association (BMI, waist), then map main strain results to genus and compare direction.
+   In an independent cohort (NHANES): preprocess genus and phenotype, run association (BMI, waist circumference), then compare direction.
 
 ---
 
