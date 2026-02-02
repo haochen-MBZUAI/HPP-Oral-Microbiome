@@ -9,8 +9,10 @@ from tqdm import tqdm
 # 1. FIXED CONFIGURATION
 # =============================================================================
 P_VALUE_COLUMN = 'Predictor_PValue'
-FEATURE_COLUMN = 'Pathway_Feature'
 ALPHA = 0.05
+
+# Feature column names (will be auto-detected)
+POSSIBLE_FEATURE_COLUMNS = ['Strain_Feature', 'Pathway_Feature']
 
 
 # =============================================================================
@@ -85,11 +87,24 @@ def main(args):
         print(f"\n-> Loading data...")
         df_original = pd.read_csv(input_file)
 
+        # Auto-detect feature column name
+        feature_col = None
+        for col_name in POSSIBLE_FEATURE_COLUMNS:
+            if col_name in df_original.columns:
+                feature_col = col_name
+                break
+        
+        if feature_col is None:
+            print(f"Error: Could not find feature column. Expected one of: {POSSIBLE_FEATURE_COLUMNS}")
+            print(f"Available columns: {list(df_original.columns)}")
+            return
+
+        print(f"-> Detected feature column: {feature_col}")
         print(f"-> Running p-value corrections...")
         df_corrected = correct_pvalues_in_dataframe(
             df=df_original,
             p_value_col=P_VALUE_COLUMN,
-            feature_col=FEATURE_COLUMN,
+            feature_col=feature_col,
             alpha=ALPHA,
             methods=methods_to_run
         )
@@ -121,7 +136,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '-i', '--input-file',
         type=str,
-        default="/home/ec2-user/Stidies/Oral_HPP/oral_data/regression_result/strain_phenotype_regression_results.csv",
+        default="/home/ec2-user/Studies/Oral_HPP/oral_data/regression_result/strain_phenotype_regression_results.csv",
         help="Path to the single input CSV file.\n(e.g., C:/data/my_data.csv)"
     )
 
@@ -129,7 +144,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '-o', '--output-file',
         type=str,
-        default="/home/ec2-user/Stidies/Oral_HPP/oral_data/regression_result/strain_phenotype_regression_results_corrected.csv",
+        default="/home/ec2-user/Studies/Oral_HPP/oral_data/regression_result/strain_phenotype_regression_results_corrected.csv",
         help="Path where the single output CSV file will be saved.\n(e.g., C:/data/my_data_corrected.csv)"
     )
 
@@ -137,8 +152,8 @@ if __name__ == "__main__":
         '-m', '--methods',
         nargs='+',
         default=['bonferroni'],
-        help="One or more p-value correction methods to use.\n"
-             "Default: bonferroni holm fdr_bh"
+        help="P-value correction method to use (only Bonferroni is supported).\n"
+             "Default: bonferroni"
     )
 
     args = parser.parse_args()
