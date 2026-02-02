@@ -22,6 +22,82 @@ def load_csv(file_path):
         return None
 
 
+def merge_with_time_window(df_microbiome, df_phenotype, time_window_days=180):
+    """
+    Merges microbiome data with phenotype data based on participant_id and collection_date.
+    Only merges rows where the collection_date difference is within the specified time window.
+    
+    Args:
+        df_microbiome: DataFrame with microbiome data (must have 'participant_id' and 'collection_data' columns)
+        df_phenotype: DataFrame with phenotype data (must have 'participant_id' and 'collection_data' columns)
+        time_window_days: Maximum allowed difference in days between collection dates (default: 180)
+    
+    Returns:
+        Merged DataFrame with only rows where collection dates are within the time window
+    """
+    print(f"Merging data with {time_window_days}-day time window...")
+    
+    # Ensure collection_data is datetime
+    if 'collection_data' in df_microbiome.columns:
+        df_microbiome = df_microbiome.copy()
+        df_microbiome['collection_data'] = pd.to_datetime(df_microbiome['collection_data'], errors='coerce')
+    
+    if 'collection_data' in df_phenotype.columns:
+        df_phenotype = df_phenotype.copy()
+        df_phenotype['collection_data'] = pd.to_datetime(df_phenotype['collection_data'], errors='coerce')
+    
+    # Merge on participant_id first
+    merged = pd.merge(
+        df_microbiome,
+        df_phenotype,
+        on='participant_id',
+        how='inner',
+        suffixes=('_microbiome', '_phenotype')
+    )
+    
+    print(f"After merging on participant_id: {len(merged)} rows")
+    
+    # Calculate date difference
+    if 'collection_data_microbiome' in merged.columns and 'collection_data_phenotype' in merged.columns:
+        merged['date_diff'] = (merged['collection_data_microbiome'] - merged['collection_data_phenotype']).dt.days.abs()
+        
+        # Filter by time window
+        merged = merged[merged['date_diff'] <= time_window_days].copy()
+        print(f"After filtering by {time_window_days}-day time window: {len(merged)} rows")
+        
+        # Keep only one collection_data column (use microbiome's)
+        if 'collection_data_microbiome' in merged.columns:
+            merged['collection_data'] = merged['collection_data_microbiome']
+            merged = merged.drop(columns=['collection_data_microbiome', 'collection_data_phenotype', 'date_diff'])
+    elif 'collection_data' in merged.columns:
+        # If both have the same column name, keep it
+        pass
+    
+    # Remove duplicate column suffixes if they exist
+    cols_to_drop = [col for col in merged.columns if col.endswith('_microbiome') or col.endswith('_phenotype')]
+    # But keep collection_data if it was renamed
+    cols_to_drop = [col for col in cols_to_drop if col != 'collection_data_microbiome' and col != 'collection_data_phenotype']
+    
+    # Handle overlapping columns (keep microbiome version for features, phenotype version for covariates)
+    overlapping_cols = set(df_microbiome.columns) & set(df_phenotype.columns)
+    overlapping_cols.discard('participant_id')
+    overlapping_cols.discard('collection_data')
+    
+    for col in overlapping_cols:
+        if col + '_microbiome' in merged.columns and col + '_phenotype' in merged.columns:
+            # For overlapping columns, prefer phenotype version (for covariates like age, sex, smoking)
+            if col in ['age_at_collection', 'sex', 'smoking', 'cohort', 'research_stage', 'array_index']:
+                merged[col] = merged[col + '_phenotype']
+                merged = merged.drop(columns=[col + '_microbiome', col + '_phenotype'])
+            else:
+                # For other overlapping columns, keep microbiome version
+                merged[col] = merged[col + '_microbiome']
+                merged = merged.drop(columns=[col + '_microbiome', col + '_phenotype'])
+    
+    print(f"Final merged data shape: {merged.shape}")
+    return merged
+
+
 # MODIFICATION: Function name and docstring updated to 'strain' and 'phenotype'.
 def run_strain_phenotype_regression(df: pd.DataFrame):
     """
@@ -228,7 +304,17 @@ def run_strain_phenotype_regression(df: pd.DataFrame):
 
 
 # --- Main script execution ---
-strain_phenotype_df = load_csv("home/ec2-user/Stidies/Oral_HPP/oral_data/strain_phenotype_processed.csv")
+# Load separate files and merge with time window
+print("=" * 80)
+print("Loading strain and phenotype data...")
+print("=" * 80)
+
+strain_df = load_csv("home/ec2-user/Studies/Oral_HPP/oral_data/strain_processed.csv")
+phenotype_df = load_csv("home/ec2-user/Studies/Oral_HPP/oral_data/phenotype_cleaned.csv")
+
+if strain_df is not None and phenotype_df is not None and not strain_df.empty and not phenotype_df.empty:
+    # Merge with 180-day time window
+    strain_phenotype_df = merge_with_time_window(strain_df, phenotype_df, time_window_days=180)
 
 if strain_phenotype_df is not None and not strain_phenotype_df.empty:
     # MODIFICATION: Called the renamed function.
@@ -238,10 +324,12 @@ if strain_phenotype_df is not None and not strain_phenotype_df.empty:
         print("\nRegression results summary:")
         print(regression_results_df.head())
 
-        output_path = '/home/ec2-user/Stidies/Oral_HPP/oral_data/regression_result/strain_phenotype_regression_results.csv'
+        output_path = '/home/ec2-user/Studies/Oral_HPP/oral_data/regression_result/strain_phenotype_regression_results.csv'
 
         regression_results_df.to_csv(output_path, index=False)
         # MODIFICATION: Updated confirmation message.
         print(f"\nResults saved to '{output_path}'")
+    else:
+        print("\nSkipping regression analysis because merged data is empty.")
 else:
     print("\nSkipping regression analysis because the input data could not be loaded or is empty.")
