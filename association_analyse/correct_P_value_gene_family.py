@@ -162,14 +162,14 @@ if __name__ == "__main__":
     parser.add_argument(
         '-i', '--input-folder',
         type=str,
-        default="/home/ec2-user/Stidies/Oral_HPP/oral_data/regression_result/gene_family_phenotype_regression_results",
+        default="/home/ec2-user/Studies/Oral_HPP/oral_data/regression_result/gene_family_phenotype_regression_results",
         help="Path to the input folder containing CSV files to be processed.\n(e.g., ./path/to/input_data)"
     )
 
     parser.add_argument(
         '-o', '--output-folder',
         type=str,
-        default="/home/ec2-user/Stidies/Oral_HPP/oral_data/regression_result/gene_family_phenotype_regression_results_corrected",
+        default="/home/ec2-user/Studies/Oral_HPP/oral_data/regression_result/gene_family_phenotype_regression_results_corrected",
         help="Path to the output folder where corrected CSV files will be saved.\n(e.g., ./path/to/output_data)"
     )
 
@@ -178,9 +178,8 @@ if __name__ == "__main__":
         nargs='+',
         type=str,
         default=['bonferroni'],
-        help="Specify one or more p-value correction methods to use.\n"
-             "*Available methods include: bonferroni, holm, fdr_bh, fdr_by, etc.\n"
-             "*Default: bonferroni holm fdr_bh"
+        help="P-value correction method to use (only Bonferroni is supported).\n"
+             "Default: bonferroni"
     )
 
     args = parser.parse_args()
