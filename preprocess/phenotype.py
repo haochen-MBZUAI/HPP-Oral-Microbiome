@@ -111,4 +111,4 @@ def process_and_save_csv(file_path: str, id_column: str = 'participant_id'):
         print(f"An unexpected error occurred: {e}")
 
 
-process_and_save_csv('home/ec2-user/Stidies/Oral_HPP/oral_data/phenotype.csv')
+process_and_save_csv('home/ec2-user/Studies/Oral_HPP/oral_data/phenotype.csv')
