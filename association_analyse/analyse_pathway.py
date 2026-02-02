@@ -2,6 +2,99 @@ import pandas as pd
 import statsmodels.formula.api as smf
 from tqdm import tqdm
 import sys
+import os
+
+
+def load_csv(file_path):
+    """
+    Loads a CSV file into a Pandas DataFrame.
+    """
+    if not os.path.exists(file_path):
+        print(f"Error: File not found at path: {file_path}")
+        return None
+    try:
+        df = pd.read_csv(file_path)
+        print(f"Successfully loaded CSV file from: {file_path} with shape {df.shape}")
+        return df
+    except Exception as e:
+        print(f"An unexpected error occurred while loading the CSV file {file_path}: {e}")
+        return None
+
+
+def merge_with_time_window(df_microbiome, df_phenotype, time_window_days=180):
+    """
+    Merges microbiome data with phenotype data based on participant_id and collection_date.
+    Only merges rows where the collection_date difference is within the specified time window.
+    
+    Args:
+        df_microbiome: DataFrame with microbiome data (must have 'participant_id' and 'collection_data' columns)
+        df_phenotype: DataFrame with phenotype data (must have 'participant_id' and 'collection_data' columns)
+        time_window_days: Maximum allowed difference in days between collection dates (default: 180)
+    
+    Returns:
+        Merged DataFrame with only rows where collection dates are within the time window
+    """
+    print(f"Merging data with {time_window_days}-day time window...")
+    
+    # Ensure collection_data is datetime
+    if 'collection_data' in df_microbiome.columns:
+        df_microbiome = df_microbiome.copy()
+        df_microbiome['collection_data'] = pd.to_datetime(df_microbiome['collection_data'], errors='coerce')
+    
+    if 'collection_data' in df_phenotype.columns:
+        df_phenotype = df_phenotype.copy()
+        df_phenotype['collection_data'] = pd.to_datetime(df_phenotype['collection_data'], errors='coerce')
+    
+    # Merge on participant_id first
+    merged = pd.merge(
+        df_microbiome,
+        df_phenotype,
+        on='participant_id',
+        how='inner',
+        suffixes=('_microbiome', '_phenotype')
+    )
+    
+    print(f"After merging on participant_id: {len(merged)} rows")
+    
+    # Calculate date difference
+    if 'collection_data_microbiome' in merged.columns and 'collection_data_phenotype' in merged.columns:
+        merged['date_diff'] = (merged['collection_data_microbiome'] - merged['collection_data_phenotype']).dt.days.abs()
+        
+        # Filter by time window
+        merged = merged[merged['date_diff'] <= time_window_days].copy()
+        print(f"After filtering by {time_window_days}-day time window: {len(merged)} rows")
+        
+        # Keep only one collection_data column (use microbiome's)
+        if 'collection_data_microbiome' in merged.columns:
+            merged['collection_data'] = merged['collection_data_microbiome']
+            merged = merged.drop(columns=['collection_data_microbiome', 'collection_data_phenotype', 'date_diff'])
+    elif 'collection_data' in merged.columns:
+        # If both have the same column name, keep it
+        pass
+    
+    # Remove duplicate column suffixes if they exist
+    cols_to_drop = [col for col in merged.columns if col.endswith('_microbiome') or col.endswith('_phenotype')]
+    # But keep collection_data if it was renamed
+    cols_to_drop = [col for col in cols_to_drop if col != 'collection_data_microbiome' and col != 'collection_data_phenotype']
+    
+    # Handle overlapping columns (keep microbiome version for features, phenotype version for covariates)
+    overlapping_cols = set(df_microbiome.columns) & set(df_phenotype.columns)
+    overlapping_cols.discard('participant_id')
+    overlapping_cols.discard('collection_data')
+    
+    for col in overlapping_cols:
+        if col + '_microbiome' in merged.columns and col + '_phenotype' in merged.columns:
+            # For overlapping columns, prefer phenotype version (for covariates like age, sex, smoking)
+            if col in ['age_at_collection', 'sex', 'smoking', 'cohort', 'research_stage', 'array_index']:
+                merged[col] = merged[col + '_phenotype']
+                merged = merged.drop(columns=[col + '_microbiome', col + '_phenotype'])
+            else:
+                # For other overlapping columns, keep microbiome version
+                merged[col] = merged[col + '_microbiome']
+                merged = merged.drop(columns=[col + '_microbiome', col + '_phenotype'])
+    
+    print(f"Final merged data shape: {merged.shape}")
+    return merged
 
 def run_gene_family_liver_regression(df: pd.DataFrame):
     """
@@ -134,7 +227,7 @@ def run_gene_family_liver_regression(df: pd.DataFrame):
 
                         results_list.append({
                             'Pathway_Feature': pathway_name_original,
-                            'Liver_Feature': liver_feature_name_original,
+                            'Phenotype_Feature': liver_feature_name_original,
                             'N_Observations': model.nobs,
                             'R_Squared': model.rsquared,
                             'Predictor_Coeff': param_predictor,
@@ -152,7 +245,7 @@ def run_gene_family_liver_regression(df: pd.DataFrame):
                     else:
                         results_list.append({
                             'Pathway_Feature': pathway_name_original,
-                            'Liver_Feature': liver_feature_name_original,
+                            'Phenotype_Feature': liver_feature_name_original,
                             'N_Observations': len(temp_df_for_regression),
                             'R_Squared': float('nan'),
                             'Predictor_Coeff': float('nan'),
@@ -173,7 +266,7 @@ def run_gene_family_liver_regression(df: pd.DataFrame):
                         f"\nRegression error: Pathway={pathway_name_original}, LiverFeature={liver_feature_name_original}. Error: {e_regression}")
                     results_list.append({
                         'Pathway_Feature': pathway_name_original,
-                        'Liver_Feature': liver_feature_name_original,
+                        'Phenotype_Feature': liver_feature_name_original,
                         'N_Observations': float('nan'),
                         'R_Squared': float('nan'),
                         'Predictor_Coeff': float('nan'),
@@ -195,14 +288,32 @@ def run_gene_family_liver_regression(df: pd.DataFrame):
     return pd.DataFrame(results_list)
 
 
-pathway_phenotype_df = load_csv("home/ec2-user/Stidies/Oral_HPP/oral_data/pathway_phenotype_processed.csv")
+# --- Main script execution ---
+# Load separate files and merge with time window
+print("=" * 80)
+print("Loading pathway and phenotype data...")
+print("=" * 80)
 
+pathway_df = load_csv("home/ec2-user/Studies/Oral_HPP/oral_data/pathway_processed.csv")
+phenotype_df = load_csv("home/ec2-user/Studies/Oral_HPP/oral_data/phenotype_cleaned.csv")
+
+if pathway_df is not None and phenotype_df is not None and not pathway_df.empty and not phenotype_df.empty:
+    # Merge with 180-day time window
+    pathway_phenotype_df = merge_with_time_window(pathway_df, phenotype_df, time_window_days=180)
+    
+    if pathway_phenotype_df is not None and not pathway_phenotype_df.empty:
 regression_results_df = run_gene_family_liver_regression(pathway_phenotype_df)
+    else:
+        print("\nSkipping regression analysis because merged data is empty.")
+        regression_results_df = pd.DataFrame()
+else:
+    print("\nSkipping regression analysis because the input data could not be loaded or is empty.")
+    regression_results_df = pd.DataFrame()
 
 
-if not regression_results_df.empty:
+if regression_results_df is not None and not regression_results_df.empty:
     print("\nRegression results summary:")
     print(regression_results_df.head())
     # You might want to save the results to a CSV file:
-    regression_results_df.to_csv('/home/ec2-user/Stidies/Oral_HPP/oral_data/regression_result/pathway_phenotype_regression_results.csv')
+    regression_results_df.to_csv('/home/ec2-user/Studies/Oral_HPP/oral_data/regression_result/pathway_phenotype_regression_results.csv')
     # print("\nResults saved to 'gene_family_liver_regression_results.csv'")
