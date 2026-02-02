@@ -24,6 +24,11 @@ def clean_and_transform_arrow(filepath, output_dir):
             print(f"Warning: File {filepath} is empty. Skipping.")
             return
 
+        # Check if number of samples is less than 200
+        if len(df) < 200:
+            print(f"Warning: File {filepath} has {len(df)} samples, which is less than 200. Skipping processing.")
+            return
+
         # Identify participant_id, collection_data, and abundance columns
         if df.shape[1] < 2:  # Need at least participant id and collection data
             print(f"Warning: File {filepath} has fewer than 2 columns. Skipping.")
@@ -120,9 +125,9 @@ def clean_and_transform_arrow(filepath, output_dir):
 
 def main():
     # --- Configuration ---
-    input_directory = "home/ec2-user/Stidies/Oral_HPP/oral_data/gene_family"
+    input_directory = "home/ec2-user/Studies/Oral_HPP/oral_data/gene_family"
     # Output directory will be created if it doesn't exist
-    output_directory = "home/ec2-user/Stidies/Oral_HPP/oral_data/gene_family_processed"
+    output_directory = "home/ec2-user/Studies/Oral_HPP/oral_data/gene_family_processed"
     # --- End Configuration ---
 
     if not os.path.isdir(input_directory):
