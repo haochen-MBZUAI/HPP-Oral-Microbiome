@@ -7,7 +7,7 @@
 1. **Population-scale, high-resolution metagenomics with deep metabolic phenotyping:** We profile standardized bilateral buccal-swab whole-metagenome data in 9,431 HPP adults, paired with 44 metabolic measures spanning liver ultrasound, CGM, and DXA.
 2. **A unified, rigorous multi-layer MWAS framework:** We systematically test associations across strain, gene-family, and pathway layers using covariate-adjusted regression and layer-wise multiple-testing control, enabling direct comparison of signals across metabolic systems.
 3. **Actionable outputs with translational and external support:** We deliver a multi-system oral–metabolic association atlas with prioritized cross-phenotype markers, demonstrate proof-of-concept metabolic disease classification using phenotype-selected oral features, and provide independent directional replication at genus resolution.
-<div align=center><img src="visulization/Fig1.png" width="80%" height="80%" /></div>
+<div align=center><img src="Fig1.png" width="80%" height="80%" /></div>
 
 ## Data Access
 
