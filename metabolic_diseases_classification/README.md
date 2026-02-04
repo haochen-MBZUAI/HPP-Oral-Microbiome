@@ -1,6 +1,6 @@
-# Metabolic Diseases Prediction Module
+# Metabolic Diseases Classification Module
 
-Identifies oral microbiome features associated with metabolic diseases and trains prediction models (case vs healthy controls).
+Identifies oral microbiome features associated with metabolic diseases and trains models (case vs healthy controls).
 
 ## Run order
 
