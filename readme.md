@@ -1,6 +1,6 @@
-# Decoding the Oral Microbiome: Metagenomic Insights into Host Metabolic Health
+# Population-scale Characterization of the Oral Microbiome and Associations with Metabolic Health
 
-> Code to reproduce the analyses in **“Decoding the Oral Microbiome: Metagenomic Insights into Host Metabolic Health”**.  
+> Code to reproduce the analyses in **“Population-scale Characterization of the Oral Microbiome and Associations with Metabolic Health”**.  
 
 ## Our Contributions:
 
